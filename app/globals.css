@@ -1,0 +1,141 @@
+/* Enable Tailwind utilities (safe to keep) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Polished visual CSS adapted from the mock. Improves spacing, contrast,
+   button/input states, and adds smooth transitions. */
+:root{
+  --bg:#f4f6f8; /* softer neutral */
+  --card:#ffffff;
+  --muted:#6b7280;
+  --primary:#25D366; /* WhatsApp-like green */
+  --accent:#475569;
+  --shadow: 0 8px 28px rgba(16,24,40,0.08);
+  --radius:16px;
+  --radius-sm:10px;
+  --glass: rgba(255,255,255,0.85);
+  --max-width:1100px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg);color:#102027}
+
+.container{max-width:var(--max-width);margin:40px auto;padding:0 20px}
+
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+
+.header{display:flex;align-items:center;justify-content:space-between;padding:18px 26px;border-bottom:1px solid rgba(15,23,42,0.04)}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#f6f8fb,#eef4ff);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--primary);font-size:18px}
+.h-title{font-size:16px;font-weight:700}
+.h-sub{font-size:13px;color:var(--muted)}
+
+/* Login page */
+.login-wrap{min-height:calc(100vh - 72px);display:flex;align-items:center;justify-content:center}
+.login-card{width:420px;padding:30px}
+.login-card h1{margin:0 0 8px;font-size:24px}
+.login-card p{margin:0 0 18px;color:var(--muted)}
+
+.input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #e6e9eb;background:white;margin-bottom:12px;font-size:15px;transition:box-shadow .15s ease,border-color .15s ease}
+.input:focus{outline:2px solid rgba(37,99,235,0.12);border-color:var(--primary);box-shadow:0 6px 18px rgba(37,99,235,0.06)}
+
+.btn{display:inline-block;background:var(--primary);color:white;padding:10px 16px;border-radius:12px;border:none;cursor:pointer;font-weight:700;transition:transform .08s ease,box-shadow .12s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(37,99,235,0.12)}
+
+.small{font-size:13px;color:var(--muted)}
+
+/* Chat layout */
+.chat-layout{display:flex;min-height:72vh}
+.sidebar{width:300px;padding:18px;border-right:1px solid rgba(15,23,42,0.04);background:linear-gradient(180deg,#fbfdff,#f7f9fc)}
+.search{display:flex;gap:10px;margin-bottom:14px}
+.search input{flex:1;padding:10px;border-radius:12px;border:1px solid #eaecec}
+.contact{display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:white;margin-bottom:10px;cursor:pointer;transition:transform .08s ease,box-shadow .12s ease}
+.contact:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(16,24,40,0.04)}
+.contact img{width:48px;height:48px;border-radius:50%;object-fit:cover}
+.contact .meta{flex:1}
+.contact .name{font-weight:700}
+.contact .small{font-size:12px;color:var(--muted)}
+
+.chat-area{flex:1;padding:20px;display:flex;flex-direction:column}
+.chat-header{border-bottom:1px dashed rgba(15,23,42,0.04);align-items:center;gap:12px;padding-bottom:12px;display:flex}
+.chat-body{flex:1;overflow:auto;padding:18px 8px}
+
+.bubble{border-radius:14px;max-width:72%;margin:8px 0;padding:12px 14px;display:inline-block;line-height:1.4}
+.bubble.sent{background:#dcf8c6;align-self:flex-end}
+.bubble.recv{background:var(--card);border:1px solid rgba(15,23,42,0.04)}
+.bubble .ts{display:block;margin-top:8px;font-size:11px;color:var(--muted)}
+
+.msg-row{display:flex;flex-direction:column}
+
+.input-bar{display:flex;gap:10px;padding-top:14px;border-top:1px solid rgba(15,23,42,0.04);align-items:center}
+.input-bar input{flex:1;padding:12px;border-radius:22px;border:1px solid #e6e9eb}
+.attach-btn{width:36px;height:36px;border-radius:50%;background:transparent;border:none;display:inline-flex;align-items:center;justify-content:center;color:var(--accent);cursor:pointer}
+.send-btn{width:40px;height:40px;border-radius:50%;background:var(--primary);display:inline-flex;align-items:center;justify-content:center;color:white;border:none;box-shadow:0 6px 18px rgba(37,211,102,0.12);cursor:pointer}
+
+/* Selected image preview */
+.img-preview{width:48px;height:48px;border-radius:8px;object-fit:cover;border:1px solid rgba(15,23,42,0.06)}
+.file-badge{position:absolute;top:-6px;right:-6px;background:var(--primary);color:white;border-radius:999px;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+
+/* Message entry animation (slide + fade) */
+.msg-enter{animation:msg-in .22s cubic-bezier(.2,.9,.2,1) both}
+@keyframes msg-in{
+  from{opacity:0;transform:translateY(8px) scale(.995)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* Admin panel */
+.admin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:18px}
+.panel{background:var(--card);padding:16px;border-radius:12px;box-shadow:var(--shadow)}
+.table{width:100%;border-collapse:collapse}
+.table th{font-size:12px;text-align:left;color:var(--accent);padding:8px}
+.table td{padding:8px;border-top:1px solid #f4f6f7}
+
+/* Utilities */
+.center{display:flex;align-items:center;justify-content:center}
+.footer{padding:16px;text-align:center;color:var(--muted);font-size:13px}
+
+@media (max-width:900px){
+  .container{padding:12px}
+  .chat-layout{flex-direction:column}
+  .sidebar{width:100%;border-right:none;border-bottom:1px solid rgba(15,23,42,0.04)}
+  .chat-area{padding:12px}
+}
+
+/* base reset for Next and our layout */
+html, body, #__next { height: 100%; }
+body { margin: 0; }
+
+/* Login hero (dark gradient) */
+.login-hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,0.02), transparent), linear-gradient(180deg,#071124,#0b1220);
+}
+
+/* Card variant for login: larger radius and subtle inner padding */
+.login-card-large{border-radius:28px;padding:40px;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02));backdrop-filter:blur(6px)}
+
+/* Empty conversation state */
+.empty-state-wrap{flex:1;display:flex;align-items:center;justify-content:center}
+.empty-state{background:var(--card);border-radius:18px;padding:20px 28px;border:1px dashed rgba(15,23,42,0.06);color:var(--accent);text-align:center}
+
+/* thin rounded input container like WhatsApp mock */
+.bottom-input-shell{display:flex;align-items:center;gap:12px;padding:12px;background:transparent}
+.bubble-input{flex:1;background:var(--card);border-radius:9999px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 20px rgba(2,6,23,0.06)}
+.bubble-input input{flex:1;border:0;outline:none;background:transparent;padding:6px}
+
+/* Make the send button overlap the input like the mock and let the text field use full width */
+.bubble-input .input-bar{display:flex;align-items:center;gap:8px;flex:1;position:relative;padding-right:0}
+.bubble-input .input-bar input{padding-right:64px /* leave space for send button */}
+.bubble-input .input-bar .send-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;box-shadow:0 8px 26px rgba(37,211,102,0.14);display:inline-flex;align-items:center;justify-content:center}
+
+/* Profile settings modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.4);display:flex;align-items:center;justify-content:center;z-index:80}
+.modal{background:var(--card);padding:18px;border-radius:12px;min-width:320px;max-width:520px;box-shadow:var(--shadow)}
+.modal input{width:100%;padding:10px;border-radius:8px;border:1px solid #e6e9eb;margin-top:8px}
+.modal button{padding:8px 12px;border-radius:10px;border:none;background:var(--primary);color:white;cursor:pointer}
+.modal h3,.modal h4{margin:6px 0}
+
