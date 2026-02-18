@@ -129,8 +129,8 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
   .chat-area{padding:10px}
   /* slightly reduce card size on mobile for tighter layout */
   .card{width:calc(100vw - 28px);max-width:520px;margin:12px auto;height:calc(100vh - 40px);border-radius:12px}
-  /* ensure chat body leaves room for the input on mobile */
-  .chat-body{padding-bottom:90px}
+  /* ensure chat body leaves room for the input on mobile and use mobile padding */
+  .chat-body{padding:12px 40px; padding-bottom:90px}
   /* Make bubbles narrower on small screens to leave room for avatar/time */
   .bubble{max-width: calc(100% - 80px) !important}
   /* Align sent/received bubbles with margins so right-aligned bubbles don't overflow */
