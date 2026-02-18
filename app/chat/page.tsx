@@ -45,18 +45,18 @@ export default function ChatPage() {
     } catch (e) {}
   }, [selectedPeer])
   const [showSettings, setShowSettings] = useState(false)
-  const [showAvatar, setShowAvatar] = useState(false)
+  const [modalAvatarUrl, setModalAvatarUrl] = useState<string | null>(null)
   const chatBodyRef = useRef<HTMLDivElement | null>(null)
 
   // allow closing the avatar modal with Escape key
   useEffect(() => {
-    if (!showAvatar) return
+    if (!modalAvatarUrl) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowAvatar(false)
+      if (e.key === 'Escape') setModalAvatarUrl(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [showAvatar])
+  }, [modalAvatarUrl])
   const handleRealtime = useCallback((newMessage: any) => {
     // debug
     try {
@@ -242,7 +242,7 @@ export default function ChatPage() {
                   src={user?.avatar_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' fill='%23e8eefc'/><text x='50%' y='54%' font-size='28' text-anchor='middle' fill='%2364758b' font-family='sans-serif'>${encodeURIComponent((user?.display_name || 'U').charAt(0).toUpperCase())}</text></svg>`}
                   alt="Mi avatar"
                   style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(15,23,42,0.04)' }}
-                  onClick={() => setShowAvatar(true)}
+                  onClick={() => setModalAvatarUrl(user?.avatar_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='600' height='600' fill='%23e8eefc'/><text x='50%' y='54%' font-size='180' text-anchor='middle' fill='%2364758b' font-family='sans-serif'>${encodeURIComponent((user?.display_name || 'U').charAt(0).toUpperCase())}</text></svg>`)}
                 />
                 <div>
                   <div className="h-title">Chats privados</div>
@@ -300,11 +300,26 @@ export default function ChatPage() {
                 </button>
               )}
 
-              <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#e6eefc' }} />
-              <div>
-                <div className="name">{contacts.find((c) => c.public_id === selectedPeer)?.display_name || 'Selecciona un chat'}</div>
-                <div className="small">{selectedPeer ? 'En línea' : ''}</div>
-              </div>
+              {selectedPeer ? (
+                (() => {
+                  const sc = contacts.find((c) => c.public_id === selectedPeer)
+                  const avatar = sc?.avatar_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' fill='%23e8eefc'/><text x='50%' y='54%' font-size='28' text-anchor='middle' fill='%2364758b' font-family='sans-serif'>${encodeURIComponent('' /* placeholder replaced at runtime below */)}</text></svg>`
+                  return (
+                    <>
+                      <img src={sc?.avatar_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' fill='%23e8eefc'/><text x='50%' y='54%' font-size='28' text-anchor='middle' fill='%2364758b' font-family='sans-serif'>${encodeURIComponent((sc?.display_name || '?').charAt(0).toUpperCase())}</text></svg>`} alt="avatar" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(15,23,42,0.04)' }} onClick={() => setModalAvatarUrl(sc?.avatar_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='600' height='600' fill='%23e8eefc'/><text x='50%' y='54%' font-size='180' text-anchor='middle' fill='%2364758b' font-family='sans-serif'>${encodeURIComponent((sc?.display_name || '?').charAt(0).toUpperCase())}</text></svg>`)} />
+                      <div>
+                        <div className="name">{sc?.display_name || 'Selecciona un chat'}</div>
+                        <div className="small">En línea</div>
+                      </div>
+                    </>
+                  )
+                })()
+              ) : (
+                <div>
+                  <div className="name">Selecciona un chat</div>
+                  <div className="small"></div>
+                </div>
+              )}
             </div>
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ color: 'var(--muted)' }}>Selecciona un chat</div>
@@ -362,19 +377,19 @@ export default function ChatPage() {
       <div style={{ height: 18 }} />
       {showSettings && <ProfileSettings onClose={() => setShowSettings(false)} />}
 
-      {/* Avatar full-view modal */}
-      {showAvatar && (
-        <div className="modal-backdrop" onClick={() => setShowAvatar(false)}>
+      {/* Avatar full-view modal (shows either user or peer avatar) */}
+      {modalAvatarUrl && (
+        <div className="modal-backdrop" onClick={() => setModalAvatarUrl(null)}>
           <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <img
-                src={user?.avatar_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='600' height='600' fill='%23e8eefc'/><text x='50%' y='54%' font-size='180' text-anchor='middle' fill='%2364758b' font-family='sans-serif'>${encodeURIComponent((user?.display_name || 'U').charAt(0).toUpperCase())}</text></svg>`}
+                src={modalAvatarUrl}
                 alt="Avatar completo"
                 style={{ maxWidth: 'min(90vw,720px)', maxHeight: '80vh', borderRadius: 12, objectFit: 'contain' }}
               />
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
-              <button className="btn" onClick={() => setShowAvatar(false)}>Cerrar</button>
+              <button className="btn" onClick={() => setModalAvatarUrl(null)}>Cerrar</button>
             </div>
           </div>
         </div>
