@@ -128,11 +128,22 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
   .card{width:calc(100vw - 28px);max-width:520px;margin:12px auto;height:calc(100vh - 40px);border-radius:12px}
   /* ensure chat body leaves room for the input on mobile */
   .chat-body{padding-bottom:90px}
+  /* Make bubbles narrower on small screens to leave room for avatar/time */
+  .bubble{max-width: calc(100% - 80px) !important}
 }
 
 /* ensure the input stays visible on mobile: sticky at bottom of chat-area */
 .chat-input-wrap{position:sticky;bottom:0;z-index:40;background:transparent}
 .chat-input-wrap .bubble-input{background:transparent;padding:0}
+
+/* Modal animation (zoom in) */
+.modal{animation:modal-in .18s cubic-bezier(.2,.9,.2,1) both}
+@keyframes modal-in{
+  from{opacity:0;transform:scale(.96)}
+  to{opacity:1;transform:scale(1)}
+}
+
+.modal img{transition:transform .18s cubic-bezier(.2,.9,.2,1)}
 
 /* Mobile-only UI helpers */
 .mobile-toggle{display:none}

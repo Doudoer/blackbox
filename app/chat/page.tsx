@@ -47,6 +47,16 @@ export default function ChatPage() {
   const [showSettings, setShowSettings] = useState(false)
   const [showAvatar, setShowAvatar] = useState(false)
   const chatBodyRef = useRef<HTMLDivElement | null>(null)
+
+  // allow closing the avatar modal with Escape key
+  useEffect(() => {
+    if (!showAvatar) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowAvatar(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showAvatar])
   const handleRealtime = useCallback((newMessage: any) => {
     // debug
     try {
