@@ -58,8 +58,10 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
 .contact .small{font-size:12px;color:var(--muted)}
 
 .chat-area{flex:1;padding:20px;display:flex;flex-direction:column}
+.chat-area{min-height:0}
 .chat-header{border-bottom:1px dashed rgba(15,23,42,0.04);align-items:center;gap:12px;padding-bottom:12px;display:flex}
 .chat-body{flex:1;overflow:auto;padding:18px 8px}
+
 
 .bubble{border-radius:14px;max-width:72%;margin:8px 0;padding:12px 14px;display:inline-block;line-height:1.4}
 .bubble.sent{background:#dcf8c6;align-self:flex-end}
@@ -98,13 +100,41 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
 @media (max-width:900px){
   .container{padding:12px}
   .chat-layout{flex-direction:column}
-  .sidebar{width:100%;border-right:none;border-bottom:1px solid rgba(15,23,42,0.04)}
-  .chat-area{padding:12px}
+  /* Sidebar becomes a top panel / slide-over on small screens */
+  .sidebar{width:280px;border-right:none;border-bottom:1px solid rgba(15,23,42,0.04);position:fixed;top:0;left:0;bottom:0;z-index:60;background:linear-gradient(180deg,#fbfdff,#f7f9fc);padding:18px;transform:translateX(-100%);transition:transform .28s cubic-bezier(.2,.9,.2,1)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar.closed{transform:translateX(-100%)}
+  /* overlay when sidebar open */
+  .sidebar-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.35);z-index:50;display:none}
+  .sidebar-backdrop.open{display:block}
+  .chat-area{padding:10px}
+  /* slightly reduce card size on mobile for tighter layout */
+  .card{width:calc(100vw - 28px);max-width:520px;margin:12px auto;height:calc(100vh - 40px);border-radius:12px}
+  /* ensure chat body leaves room for the input on mobile */
+  .chat-body{padding-bottom:90px}
+}
+
+/* ensure the input stays visible on mobile: sticky at bottom of chat-area */
+.chat-input-wrap{position:sticky;bottom:0;z-index:40;background:transparent}
+.chat-input-wrap .bubble-input{background:transparent;padding:0}
+
+/* Mobile-only UI helpers */
+.mobile-toggle{display:none}
+@media (max-width:900px){
+  .mobile-toggle{display:inline-flex}
+  .desktop-only{display:none}
 }
 
 /* base reset for Next and our layout */
 html, body, #__next { height: 100%; }
 body { margin: 0; }
+
+/* Ensure the chat layout is constrained to the viewport and internal flex children can scroll without expanding the container */
+.container{height:100vh}
+.card{height:100%;display:flex;flex-direction:row}
+.chat-layout{height:100%}
+.chat-area{height:100%;display:flex;flex-direction:column;min-height:0}
+.chat-body{flex:1;overflow:auto;min-height:0}
 
 /* Login hero (dark gradient) */
 .login-hero {

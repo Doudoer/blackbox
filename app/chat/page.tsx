@@ -6,7 +6,7 @@ import useRealtimeMessages from '../../hooks/useRealtimeMessages'
 import ChatMessage from '../../components/ChatMessage'
 import ChatInput from '../../components/ChatInput'
 import useAuth from '../../hooks/useAuth'
-import { Smile, Paperclip, Image as FeatherImage, ArrowUp, LogOut, Settings, Trash2 } from 'react-feather'
+import { Smile, Paperclip, Image as FeatherImage, ArrowUp, LogOut, Settings, Trash2, Menu, ArrowLeft } from 'react-feather'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 const ProfileSettings = dynamic(() => import('../../components/ProfileSettings'), { ssr: false })
@@ -19,7 +19,31 @@ export default function ChatPage() {
   const supabase = createClient()
   const [messages, setMessages] = useState<any[]>([])
   const [contacts, setContacts] = useState<any[]>([])
+  // selectedPeer now stores the contact's public_id
   const [selectedPeer, setSelectedPeer] = useState<string | null>(null)
+  // sidebar open state for mobile
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false)
+
+  // on client, open the sidebar by default for small screens so contacts are visible
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const mw = window.innerWidth
+        if (mw < 900) {
+          setSidebarOpen(true)
+        }
+      }
+    } catch (e) {}
+  }, [])
+
+  // keep sidebar visible when no peer is selected on mobile; close when a peer is selected
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && window.innerWidth < 900) {
+        setSidebarOpen(!selectedPeer)
+      }
+    } catch (e) {}
+  }, [selectedPeer])
   const [showSettings, setShowSettings] = useState(false)
   const chatBodyRef = useRef<HTMLDivElement | null>(null)
   const handleRealtime = useCallback((newMessage: any) => {
@@ -29,9 +53,9 @@ export default function ChatPage() {
       console.debug('[handleRealtime] got message', { newMessage, selectedPeer, userId: user?.id })
     } catch (e) {}
 
-    // only append messages that involve the current user
+    // only append messages that involve the current user (public ids)
     if (!user) return
-    const involvesMe = newMessage.sender_id === user.id || newMessage.receiver_id === user.id
+    const involvesMe = newMessage.sender_public_id === user.public_id || newMessage.receiver_public_id === user.public_id
     if (!involvesMe) {
       // eslint-disable-next-line no-console
       console.debug('[handleRealtime] ignored: not involving me')
@@ -40,7 +64,7 @@ export default function ChatPage() {
 
     // if a peer is selected, only append messages that are part of the current conversation
     if (selectedPeer) {
-      const involvesPeer = newMessage.sender_id === selectedPeer || newMessage.receiver_id === selectedPeer
+      const involvesPeer = newMessage.sender_public_id === selectedPeer || newMessage.receiver_public_id === selectedPeer
       if (!involvesPeer) {
         // eslint-disable-next-line no-console
         console.debug('[handleRealtime] ignored: not part of selected peer conversation', { selectedPeer })
@@ -50,7 +74,7 @@ export default function ChatPage() {
 
     setMessages((prev) => {
       // if we have an optimistic message that matches this real one, replace it
-      const idx = prev.findIndex((m) => m.optimistic && m.sender_id === newMessage.sender_id && m.receiver_id === newMessage.receiver_id && m.message_type === newMessage.message_type && (m.content === newMessage.content || (m.image_url && newMessage.image_url && m.image_url === newMessage.image_url)))
+      const idx = prev.findIndex((m) => m.optimistic && m.sender_public_id === newMessage.sender_public_id && m.receiver_public_id === newMessage.receiver_public_id && m.message_type === newMessage.message_type && (m.content === newMessage.content || (m.image_url && newMessage.image_url && m.image_url === newMessage.image_url)))
       if (idx !== -1) {
         const copy = [...prev]
         copy[idx] = newMessage
@@ -62,13 +86,13 @@ export default function ChatPage() {
     })
   }, [user?.id, selectedPeer])
 
-  useRealtimeMessages(handleRealtime, user?.id)
+  useRealtimeMessages(handleRealtime, user?.public_id)
 
   // load contacts and initial messages when user changes
   useEffect(() => {
     if (!user) return
 
-    const load = async () => {
+  const load = async () => {
       // contacts
       try {
         const res = await fetch('/api/contacts', { credentials: 'include' })
@@ -97,8 +121,8 @@ export default function ChatPage() {
     const tmpId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
     const optimisticMsg: any = {
       id: tmpId,
-      sender_id: user.id,
-      receiver_id: selectedPeer,
+      sender_public_id: user.public_id,
+      receiver_public_id: selectedPeer,
       content,
       message_type: type,
       image_url: type === 'image' ? url : null,
@@ -106,7 +130,7 @@ export default function ChatPage() {
       created_at: new Date().toISOString(),
       optimistic: true,
     }
-    setMessages((prev) => [...prev, optimisticMsg])
+  setMessages((prev) => [...prev, optimisticMsg])
 
     try {
       const body = {
@@ -116,7 +140,7 @@ export default function ChatPage() {
         image_url: type === 'image' ? url : null,
         sticker_url: type === 'sticker' ? url : null,
       }
-      await fetch('/api/messages', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  await fetch('/api/messages', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       // actual message will arrive through realtime subscription and replace optimistic one
     } catch (err) {
       console.error('sendMessage error', err)
@@ -126,15 +150,15 @@ export default function ChatPage() {
   }
 
   const handleDeleteContact = async (contactId: string) => {
-    if (!contactId) return
+  if (!contactId) return
     const ok = window.confirm('¿Eliminar este contacto? Esta acción no se puede deshacer.')
     if (!ok) return
 
     try {
       const res = await fetch(`/api/contacts?id=${encodeURIComponent(contactId)}`, { method: 'DELETE', credentials: 'include' })
       const j = await res.json()
-      if (res.ok && j.ok) {
-        setContacts((prev) => prev.filter((c) => c.id !== contactId))
+        if (res.ok && j.ok) {
+        setContacts((prev) => prev.filter((c) => c.public_id !== contactId))
         if (selectedPeer === contactId) {
           setSelectedPeer(null)
           setMessages([])
@@ -196,8 +220,8 @@ export default function ChatPage() {
 
   return (
     <div className="container" style={{ height: '100vh', boxSizing: 'border-box', paddingTop: 12 }}>
-  <div className="card" style={{ display: 'flex', overflow: 'hidden', flex: 1, height: 'calc(100vh - 160px)' }}>
-        <aside className="sidebar">
+  <div className="card" style={{ display: 'flex', overflow: 'hidden', flex: 1 }}>
+          <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
           <div className="header">
             <div className="brand">
               <div className="logo">R</div>
@@ -213,12 +237,12 @@ export default function ChatPage() {
           </div>
           <div>
             {contacts.map((c) => (
-              <div key={c.id} className="contact" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 8, background: selectedPeer === c.id ? 'rgba(0,0,0,0.03)' : undefined }}>
-                <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', flex: 1 }} onClick={() => setSelectedPeer(c.id)}>
-                  <img src={c.avatar_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><rect width='128' height='128' fill='%23e8eefc'/><text x='50%' y='54%' font-size='56' text-anchor='middle' fill='%2364758b' font-family='sans-serif'>${encodeURIComponent((c.username || '?').charAt(0).toUpperCase())}</text></svg>`} alt="avatar" />
+              <div key={c.public_id} className="contact" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 8, background: selectedPeer === c.public_id ? 'rgba(0,0,0,0.03)' : undefined }}>
+                <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', flex: 1 }} onClick={() => { setSelectedPeer(c.public_id); setSidebarOpen(false) }}>
+                  <img src={c.avatar_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><rect width='128' height='128' fill='%23e8eefc'/><text x='50%' y='54%' font-size='56' text-anchor='middle' fill='%2364758b' font-family='sans-serif'>${encodeURIComponent((c.display_name || '?').charAt(0).toUpperCase())}</text></svg>`} alt="avatar" />
                   <div className="meta">
-                    <div className="name">{c.username}</div>
-                    <div className="small">{c.id}</div>
+                    <div className="name">{c.display_name}</div>
+                    <div className="small">{c.public_id}</div>
                   </div>
                 </div>
 
@@ -226,11 +250,11 @@ export default function ChatPage() {
                   <button
                     className="attach-btn"
                     title="Eliminar contacto"
-                    aria-label={`Eliminar ${c.username}`}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteContact(c.id)
-                    }}
+                    aria-label={`Eliminar ${c.display_name}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteContact(c.public_id)
+                      }}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -239,13 +263,26 @@ export default function ChatPage() {
             ))}
           </div>
         </aside>
+          {/* mobile backdrop */}
+          <div className={`sidebar-backdrop ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
 
         <main className="chat-area" style={{ display: 'flex', flexDirection: 'column', background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 1px, transparent 1px, transparent 40px), #efe4db' }}>
           <div className="chat-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* mobile toggle button */}
+              <button className="attach-btn mobile-toggle" aria-label="Abrir chats" onClick={() => setSidebarOpen(true)} style={{ marginRight: 6 }}>
+                <Menu size={18} />
+              </button>
+              {/* back button when in mobile and a peer selected */}
+              {selectedPeer && (
+                <button className="attach-btn mobile-toggle" aria-label="Volver" onClick={() => { setSelectedPeer(null); setSidebarOpen(true) }} style={{ marginRight: 6 }}>
+                  <ArrowLeft size={18} />
+                </button>
+              )}
+
               <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#e6eefc' }} />
               <div>
-                <div className="name">{contacts.find((c) => c.id === selectedPeer)?.username || 'Selecciona un chat'}</div>
+                <div className="name">{contacts.find((c) => c.public_id === selectedPeer)?.display_name || 'Selecciona un chat'}</div>
                 <div className="small">{selectedPeer ? 'En línea' : ''}</div>
               </div>
             </div>
@@ -282,13 +319,13 @@ export default function ChatPage() {
             ) : (
               <div className="msg-row" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {messages.map((msg) => (
-                  <ChatMessage key={msg.id} message={msg} isOwn={msg.sender_id === user?.id} />
+                  <ChatMessage key={msg.id} message={msg} isOwn={msg.sender_public_id === user?.public_id} />
                 ))}
               </div>
             )}
           </div>
 
-          <div style={{ padding: 12, borderTop: '1px solid rgba(15,23,42,0.03)', display: 'flex', alignItems: 'center' }}>
+          <div className="chat-input-wrap" style={{ padding: 12, borderTop: '1px solid rgba(15,23,42,0.03)', display: 'flex', alignItems: 'center' }}>
             <div className="bubble-input" style={{ flex: 1 }}>
               {/* left icons */}
               <button className="attach-btn" title="Emoji" style={{ background: 'transparent' }} aria-label="Emoji"><Smile size={18} /></button>

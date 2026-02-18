@@ -21,7 +21,12 @@ export async function GET(req: Request) {
   const uid = payload.sub
     const supabase = createAdminClient()
 
-    const { data, error } = await supabase.from('profiles').select('id, bio, avatar_url').neq('id', uid)
+    // exclude current user and any admin account (username = 'admin') from contacts
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, bio, avatar_url')
+      .neq('id', uid)
+      .neq('username', 'admin')
     if (error) {
       console.error('[contacts] supabase error:', error)
       return NextResponse.json({ ok: false, error: error.message, details: error }, { status: 500 })
