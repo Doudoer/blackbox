@@ -68,6 +68,19 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
 .bubble.recv{background:var(--card);border:1px solid rgba(15,23,42,0.04)}
 .bubble .ts{display:block;margin-top:8px;font-size:11px;color:var(--muted)}
 
+/* Prevent overflow on small screens and allow long words/URLs to wrap */
+.bubble{
+  box-sizing: border-box;
+  /* Use a responsive max width: at most 72% but never wider than the viewport minus padding */
+  max-width: min(72%, calc(100% - 120px));
+  word-break: break-word; /* break long words */
+  overflow-wrap: anywhere;
+  white-space: pre-wrap; /* preserve newlines but allow wrapping */
+}
+
+/* Ensure images inside bubbles don't overflow */
+.bubble img{max-width:100%;height:auto;display:block;border-radius:8px}
+
 .msg-row{display:flex;flex-direction:column}
 
 .input-bar{display:flex;gap:10px;padding-top:14px;border-top:1px solid rgba(15,23,42,0.04);align-items:center}

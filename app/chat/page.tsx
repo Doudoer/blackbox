@@ -45,6 +45,7 @@ export default function ChatPage() {
     } catch (e) {}
   }, [selectedPeer])
   const [showSettings, setShowSettings] = useState(false)
+  const [showAvatar, setShowAvatar] = useState(false)
   const chatBodyRef = useRef<HTMLDivElement | null>(null)
   const handleRealtime = useCallback((newMessage: any) => {
     // debug
@@ -225,9 +226,18 @@ export default function ChatPage() {
           <div className="header">
             <div className="brand">
               <div className="logo">R</div>
-              <div>
-                <div className="h-title">Chats privados</div>
-                <div className="h-sub">{user?.username || 'Usuario'}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {/* Avatar next to title; clicking opens full-size modal */}
+                <img
+                  src={user?.avatar_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' fill='%23e8eefc'/><text x='50%' y='54%' font-size='28' text-anchor='middle' fill='%2364758b' font-family='sans-serif'>${encodeURIComponent((user?.display_name || 'U').charAt(0).toUpperCase())}</text></svg>`}
+                  alt="Mi avatar"
+                  style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(15,23,42,0.04)' }}
+                  onClick={() => setShowAvatar(true)}
+                />
+                <div>
+                  <div className="h-title">Chats privados</div>
+                  <div className="h-sub">{user?.display_name || user?.username || 'Usuario'}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -341,6 +351,24 @@ export default function ChatPage() {
       </div>
       <div style={{ height: 18 }} />
       {showSettings && <ProfileSettings onClose={() => setShowSettings(false)} />}
+
+      {/* Avatar full-view modal */}
+      {showAvatar && (
+        <div className="modal-backdrop" onClick={() => setShowAvatar(false)}>
+          <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <img
+                src={user?.avatar_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='600' height='600' fill='%23e8eefc'/><text x='50%' y='54%' font-size='180' text-anchor='middle' fill='%2364758b' font-family='sans-serif'>${encodeURIComponent((user?.display_name || 'U').charAt(0).toUpperCase())}</text></svg>`}
+                alt="Avatar completo"
+                style={{ maxWidth: 'min(90vw,720px)', maxHeight: '80vh', borderRadius: 12, objectFit: 'contain' }}
+              />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+              <button className="btn" onClick={() => setShowAvatar(false)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{ height: 12 }} />
       <div className="footer">Interfaz visual - sin lógica. Copia para maqueta.</div>
     </div>
