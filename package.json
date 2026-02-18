@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "create-test-users": "node scripts/create_test_users.js",
+    "prebuild": "node scripts/check_env.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
