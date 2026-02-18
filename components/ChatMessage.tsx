@@ -12,8 +12,8 @@ export default function ChatMessage({ message, isOwn }: { message: any; isOwn: b
   }, [])
 
   return (
-    <div className="msg-row" style={{ alignItems: isOwn ? 'flex-end' : 'flex-start' }}>
-      <div className={`bubble ${isOwn ? 'sent' : 'recv'} ${enter ? 'msg-enter' : ''}`}>
+    <div className="msg-item" style={{ display: 'flex', justifyContent: isOwn ? 'flex-end' : 'flex-start', width: '100%' }}>
+      <div className={`bubble ${isOwn ? 'sent' : 'recv'} ${enter ? 'msg-enter' : ''}`} style={{ maxWidth: '100%' }}>
         {message.message_type === 'text' && <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{message.content}</p>}
         {message.message_type === 'image' && message.image_url && (
           // eslint-disable-next-line @next/next/no-img-element

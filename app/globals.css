@@ -83,6 +83,9 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
 
 .msg-row{display:flex;flex-direction:column}
 
+/* Per-message wrapper — full width so we can align bubbles left/right with justify-content */
+.msg-item{display:flex;width:100%}
+
 .input-bar{display:flex;gap:10px;padding-top:14px;border-top:1px solid rgba(15,23,42,0.04);align-items:center}
 .input-bar input{flex:1;padding:12px;border-radius:22px;border:1px solid #e6e9eb}
 .attach-btn{width:36px;height:36px;border-radius:50%;background:transparent;border:none;display:inline-flex;align-items:center;justify-content:center;color:var(--accent);cursor:pointer}
