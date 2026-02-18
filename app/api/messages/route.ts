@@ -24,11 +24,20 @@ export async function GET(req: Request) {
     const uid = payload.sub
     const supabase = createAdminClient()
 
+    // resolve peer if it's a public_id
+    const { resolvePublicIdToUid, looksLikeUUID, makePublicId } = await import('../../../lib/privacy')
+    let peerUid = peer
+    if (!looksLikeUUID(peerUid!)) {
+      const resolved = await resolvePublicIdToUid(peerUid!)
+      if (!resolved) return NextResponse.json({ ok: false, error: 'Peer not found' }, { status: 404 })
+      peerUid = resolved
+    }
+
     // fetch messages where (sender=me AND receiver=peer) OR (sender=peer AND receiver=me)
     const { data, error } = await supabase
       .from('messages')
       .select('*')
-      .or(`and(sender_id.eq.${uid},receiver_id.eq.${peer}),and(sender_id.eq.${peer},receiver_id.eq.${uid})`)
+      .or(`and(sender_id.eq.${uid},receiver_id.eq.${peerUid}),and(sender_id.eq.${peerUid},receiver_id.eq.${uid})`)
       .order('created_at', { ascending: true })
 
     if (error) {
@@ -36,7 +45,17 @@ export async function GET(req: Request) {
       return NextResponse.json({ ok: false, error: error.message, details: error }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, messages: data || [] })
+    // map message ids to public ids to avoid exposing uuids
+    const mapped = (data || []).map((m: any) => ({
+      ...m,
+      sender_public_id: makePublicId(m.sender_id),
+      receiver_public_id: makePublicId(m.receiver_id),
+      // remove raw uids from payload
+      sender_id: undefined,
+      receiver_id: undefined,
+    }))
+
+    return NextResponse.json({ ok: true, messages: mapped })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message || String(err) }, { status: 500 })
   }
@@ -73,13 +92,34 @@ export async function POST(req: Request) {
       message_type: message_type || 'text',
     }
 
+    // receiver_id may be a public_id; resolve if needed
+    const { resolvePublicIdToUid, looksLikeUUID, makePublicId } = await import('../../../lib/privacy')
+    let finalReceiver = receiver_id
+    if (!looksLikeUUID(finalReceiver)) {
+      const resolved = await resolvePublicIdToUid(finalReceiver)
+      if (!resolved) return NextResponse.json({ ok: false, error: 'Recipient not found' }, { status: 404 })
+      finalReceiver = resolved
+    }
+    insert.receiver_id = finalReceiver
+
     const { data, error } = await supabase.from('messages').insert(insert).select().single()
     if (error) {
       console.error('[messages:POST] supabase error:', error)
       return NextResponse.json({ ok: false, error: error.message, details: error }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, message: data })
+    // return a privacy-safe message object
+    const msg = data
+    const safe = {
+      ...msg,
+      sender_public_id: makePublicId(msg.sender_id),
+      receiver_public_id: makePublicId(msg.receiver_id),
+    }
+    // strip raw ids
+    delete (safe as any).sender_id
+    delete (safe as any).receiver_id
+
+    return NextResponse.json({ ok: true, message: safe })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message || String(err) }, { status: 500 })
   }

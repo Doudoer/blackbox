@@ -18,16 +18,24 @@ export async function GET(req: Request) {
       return NextResponse.json({ ok: false, error: 'Invalid token' }, { status: 401 })
     }
 
-    const uid = payload.sub
+  const uid = payload.sub
     const supabase = createAdminClient()
 
-    const { data, error } = await supabase.from('profiles').select('id, username, avatar_url').neq('id', uid)
+    const { data, error } = await supabase.from('profiles').select('id, bio, avatar_url').neq('id', uid)
     if (error) {
       console.error('[contacts] supabase error:', error)
       return NextResponse.json({ ok: false, error: error.message, details: error }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, contacts: data || [] })
+    // map to privacy-safe shape: display_name (from bio), avatar_url, public_id
+    const { makePublicId } = await import('../../../lib/privacy')
+    const contacts = (data || []).map((r: any) => ({
+      display_name: r.bio || '',
+      avatar_url: r.avatar_url || null,
+      public_id: makePublicId(r.id),
+    }))
+
+    return NextResponse.json({ ok: true, contacts })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message || String(err) }, { status: 500 })
   }
@@ -51,7 +59,7 @@ export async function DELETE(req: Request) {
     const uid = payload.sub
     const supabase = createAdminClient()
 
-    // accept contact id from query string (?id=...) or body
+  // accept contact id from query string (?id=...) or body
     const url = new URL(req.url)
     const id = url.searchParams.get('id')
 
@@ -67,6 +75,14 @@ export async function DELETE(req: Request) {
     }
 
     if (!contactId) return NextResponse.json({ ok: false, error: 'Missing contact id' }, { status: 400 })
+
+    // if caller provided a public_id, resolve it to uid
+    const { resolvePublicIdToUid, looksLikeUUID } = await import('../../../lib/privacy')
+    if (!looksLikeUUID(contactId)) {
+      const resolved = await resolvePublicIdToUid(contactId)
+      if (!resolved) return NextResponse.json({ ok: false, error: 'Contact not found' }, { status: 404 })
+      contactId = resolved
+    }
 
     // attempt to delete an explicit contacts entry (if the table exists)
     try {

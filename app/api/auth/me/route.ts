@@ -45,16 +45,16 @@ export async function GET(req: Request) {
         return NextResponse.json({ user: null })
       }
 
+      // map to privacy-safe public user (do not expose uid or username)
+      const { makePublicId } = await import('../../../../lib/privacy')
       const publicUser = {
-        id: data.id,
-        username: data.username,
+        public_id: makePublicId(data.id),
+        display_name: data.bio || '',
         avatar_url: data.avatar_url,
-        bio: data.bio,
         pass_blocked: data.pass_blocked,
-        // if the DB column doesn't exist we'll default to false
         has_lock: !!(data as any).lock_key_hash,
       }
-      console.log('[auth/me] returning user with id=', publicUser.id)
+      console.log('[auth/me] returning user public_id=', publicUser.public_id)
       return NextResponse.json({ user: publicUser })
     } catch (dbErr) {
       console.log('[auth/me] profiles query threw exception', (dbErr as any).message)
