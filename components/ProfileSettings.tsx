@@ -128,6 +128,7 @@ export default function ProfileSettings({ onClose }: { onClose?: () => void }) {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Lock update failed')
       setLocked(value)
+  try { window.dispatchEvent(new CustomEvent('profile:updated')) } catch (e) {}
     } catch (err) {
       alert('Error: ' + (err as any).message)
     } finally {
@@ -146,6 +147,7 @@ export default function ProfileSettings({ onClose }: { onClose?: () => void }) {
       setLockKey('')
       setLockKeyConfirm('')
       alert('Clave de bloqueo establecida')
+  try { window.dispatchEvent(new CustomEvent('profile:updated')) } catch (e) {}
     } catch (err) {
       alert('Error: ' + (err as any).message)
     } finally {
