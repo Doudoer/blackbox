@@ -86,6 +86,9 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
 /* Per-message wrapper — full width so we can align bubbles left/right with justify-content */
 .msg-item{display:flex;width:100%}
 
+/* Give each message row horizontal padding so bubbles don't touch viewport edges */
+.msg-item{padding:0 12px}
+
 .input-bar{display:flex;gap:10px;padding-top:14px;border-top:1px solid rgba(15,23,42,0.04);align-items:center}
 .input-bar input{flex:1;padding:12px;border-radius:22px;border:1px solid #e6e9eb}
 .attach-btn{width:36px;height:36px;border-radius:50%;background:transparent;border:none;display:inline-flex;align-items:center;justify-content:center;color:var(--accent);cursor:pointer}
@@ -130,6 +133,9 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
   .chat-body{padding-bottom:90px}
   /* Make bubbles narrower on small screens to leave room for avatar/time */
   .bubble{max-width: calc(100% - 80px) !important}
+  /* Align sent/received bubbles with margins so right-aligned bubbles don't overflow */
+  .msg-item .bubble.sent{margin-left:auto;margin-right:6px}
+  .msg-item .bubble.recv{margin-right:auto;margin-left:6px}
 }
 
 /* ensure the input stays visible on mobile: sticky at bottom of chat-area */
