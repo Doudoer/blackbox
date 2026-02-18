@@ -16,6 +16,9 @@
   --radius-sm:10px;
   --glass: rgba(255,255,255,0.85);
   --max-width:1100px;
+  /* responsive spacing for chat sides (can be overridden in media queries) */
+  --chat-side-pad: 24px;
+  --chat-vertical-pad: 12px;
 }
 
 *{box-sizing:border-box}
@@ -60,12 +63,14 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
 .chat-area{flex:1;padding:20px;display:flex;flex-direction:column}
 .chat-area{min-height:0}
 .chat-header{border-bottom:1px dashed rgba(15,23,42,0.04);align-items:center;gap:12px;padding-bottom:12px;display:flex}
-.chat-body{flex:1;overflow:auto;padding:18px 8px}
+.chat-body{flex:1;overflow:auto;padding:var(--chat-vertical-pad) var(--chat-side-pad)}
 
 
 .bubble{border-radius:14px;max-width:72%;margin:8px 0;padding:12px 14px;display:inline-block;line-height:1.4}
+.bubble{border-radius:14px;max-width:72%;margin:8px 0;padding:12px 14px;display:inline-block;line-height:1.4;box-sizing:border-box}
 .bubble.sent{background:#dcf8c6;align-self:flex-end}
 .bubble.recv{background:var(--card);border:1px solid rgba(15,23,42,0.04)}
+.bubble .ts{display:block;margin-top:8px;font-size:11px;color:var(--muted)}
 .bubble .ts{display:block;margin-top:8px;font-size:11px;color:var(--muted)}
 
 /* Prevent overflow on small screens and allow long words/URLs to wrap */
@@ -82,9 +87,13 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
 .bubble img{max-width:100%;height:auto;display:block;border-radius:8px}
 
 .msg-row{display:flex;flex-direction:column}
+.msg-row{display:flex;flex-direction:column}
 
 /* Per-message wrapper — full width so we can align bubbles left/right with justify-content */
 .msg-item{display:flex;width:100%}
+.msg-item{display:flex;width:100%}
+/* ensure messages have comfortable horizontal breathing room */
+.msg-item{padding:0 8px}
 
 /* Give each message row horizontal padding so bubbles don't touch viewport edges */
 .msg-item{padding:0 12px}
@@ -136,6 +145,21 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
   /* Align sent/received bubbles with margins so right-aligned bubbles don't overflow */
   .msg-item .bubble.sent{margin-left:auto;margin-right:6px}
   .msg-item .bubble.recv{margin-right:auto;margin-left:6px}
+  .chat-area{padding:10px}
+  /* slightly reduce card size on mobile for tighter layout */
+  .card{width:calc(100vw - 28px);max-width:520px;margin:12px auto;height:calc(100vh - 40px);border-radius:12px}
+  /* mobile-specific spacing variables */
+  :root{ --chat-side-pad: 40px; --chat-vertical-pad: 12px }
+  /* ensure chat body leaves room for the input on mobile */
+  .chat-body{padding-bottom:90px}
+  /* Make bubbles narrower on small screens to leave room for avatar/time. Use clamp for better scaling */
+  .bubble{max-width: min(72%, calc(100% - 96px)) !important}
+  /* Ensure bubble text and images wrap and cannot overflow */
+  .bubble{word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap}
+  .bubble img{max-width:100%;height:auto}
+  /* margins so right-aligned bubbles don't overflow */
+  .msg-item .bubble.sent{margin-left:auto;margin-right:6px}
+  .msg-item .bubble.recv{margin-right:auto;margin-left:6px}
 }
 
 /* ensure the input stays visible on mobile: sticky at bottom of chat-area */
@@ -150,6 +174,18 @@ html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -app
 }
 
 .modal img{transition:transform .18s cubic-bezier(.2,.9,.2,1)}
+
+/* General responsive helpers */
+@media (max-width:420px){
+  /* very small phones: reduce side padding and bubble max width */
+  :root{ --chat-side-pad: 20px }
+  .bubble{max-width: calc(100% - 64px) !important}
+  .msg-item{padding:0 6px}
+  .contact img{width:40px;height:40px}
+}
+
+/* Respect safe area insets on modern phones (iOS/Android) */
+.card{padding-left: env(safe-area-inset-left);padding-right: env(safe-area-inset-right)}
 
 /* Mobile-only UI helpers */
 .mobile-toggle{display:none}
