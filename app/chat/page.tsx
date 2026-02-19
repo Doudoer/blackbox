@@ -188,8 +188,19 @@ export default function ChatPage() {
   useEffect(() => {
     if (!chatBodyRef.current) return
     try {
-      // scroll to bottom smoothly
-      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight
+      // Only auto-scroll when the user is already near the bottom.
+      // If the user has scrolled up to read earlier messages we should not yank them
+      // back to the bottom when new messages arrive.
+      const el = chatBodyRef.current
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+      const THRESHOLD = 150 // px — if within this distance, consider "at bottom"
+      if (distanceFromBottom <= THRESHOLD) {
+        // scroll to bottom
+        el.scrollTop = el.scrollHeight
+      } else {
+        // user is reading older messages; do not auto-scroll
+        // Optional: could show "new messages" indicator here
+      }
     } catch (e) {
       // ignore
     }
@@ -362,15 +373,9 @@ export default function ChatPage() {
 
           <div className="chat-input-wrap" style={{ padding: 12, borderTop: '1px solid rgba(15,23,42,0.03)', display: 'flex', alignItems: 'center' }}>
             <div className="bubble-input" style={{ flex: 1 }}>
-              {/* left icons */}
-              <button className="attach-btn" title="Emoji" style={{ background: 'transparent' }} aria-label="Emoji"><Smile size={18} /></button>
-              <button className="attach-btn" title="Adjuntar" aria-label="Adjuntar"><Paperclip size={18} /></button>
-              <button className="attach-btn" title="Imagen" aria-label="Imagen"><FeatherImage size={18} /></button>
-
+              {/* ChatInput now owns emoji/attach/sticker controls to avoid duplicates */}
               <ChatInput onSend={sendMessage} />
             </div>
-
-            {/* decorative send removed — ChatInput contains the single send button */}
           </div>
         </main>
       </div>

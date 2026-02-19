@@ -52,7 +52,8 @@ export async function GET(req: Request) {
         display_name: data.bio || '',
         avatar_url: data.avatar_url,
         pass_blocked: data.pass_blocked,
-        has_lock: !!(data as any).lock_key_hash,
+        // We use a global default unlock key; indicate that a lock mechanism exists for all users.
+        has_lock: true,
       }
       console.log('[auth/me] returning user public_id=', publicUser.public_id)
       return NextResponse.json({ user: publicUser })

@@ -27,7 +27,8 @@ export default function ProfileSettings({ onClose }: { onClose?: () => void }) {
         setBio(u.bio || '')
         setAvatarUrl(u.avatar_url || null)
         setLocked(!!u.pass_blocked)
-        setHasLock(!!u.has_lock)
+        // has_lock is true globally in this deployment (default unlock key present)
+        setHasLock(true)
       }
     })
     // load lock flag
@@ -190,12 +191,10 @@ export default function ProfileSettings({ onClose }: { onClose?: () => void }) {
           </div>
 
           <div style={{ width: '100%', marginTop: 8 }}>
-            <label>Clave de bloqueo (PIN/contraseña)</label>
-            <input type="password" placeholder="Clave de bloqueo" value={lockKey} onChange={(e) => setLockKey(e.target.value)} />
-            <input type="password" placeholder="Confirmar clave" value={lockKeyConfirm} onChange={(e) => setLockKeyConfirm(e.target.value)} />
+            <label>Clave de desbloqueo por defecto</label>
+            <div style={{ color: 'var(--muted)', marginBottom: 8 }}>La aplicación usa una clave de desbloqueo por defecto para todos los usuarios. No es posible establecer una clave personalizada. Valor por defecto: <strong>TUTORIAL2097</strong></div>
             <div style={{ marginTop: 8 }}>
-              <button onClick={handleSetLockKey} disabled={loading}>Guardar clave de bloqueo</button>
-              {hasLock && <span style={{ marginLeft: 8 }}>Clave configurada</span>}
+              <span style={{ color: hasLock ? 'green' : 'var(--muted)' }}>{hasLock ? 'Mecanismo de desbloqueo activo' : 'Sin mecanismo de desbloqueo'}</span>
             </div>
           </div>
         </div>

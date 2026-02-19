@@ -238,3 +238,11 @@ body { margin: 0; }
 .modal button{padding:8px 12px;border-radius:10px;border:none;background:var(--primary);color:white;cursor:pointer}
 .modal h3,.modal h4{margin:6px 0}
 
+/* Hide only avatar images throughout the chat UI (keep other images like logos visible) */
+/* Targets: contacts list avatars and images explicitly marked as avatar via alt text. */
+.contact img,
+img[alt="avatar"],
+img[alt="Mi avatar"] {
+  display: none !important;
+}
+

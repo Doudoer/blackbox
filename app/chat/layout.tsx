@@ -12,6 +12,20 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
   const { user, loading } = useAuth()
   const router = useRouter()
 
+  // When leaving the chat layout (client-side navigation away), persist the
+  // locked flag so that returning to /chat will show the lock modal if the
+  // user has app-lock enabled. We do this in the unmount cleanup of an effect
+  // because the layout will unmount during route changes.
+  useEffect(() => {
+    const LOCK_KEY = 'bb_app_locked'
+    return () => {
+      try {
+        // persist lock flag on leaving chat if pass_blocked is enabled
+        if (user?.pass_blocked) sessionStorage.setItem(LOCK_KEY, '1')
+      } catch (e) {}
+    }
+  }, [user])
+
   useEffect(() => {
     async function ensureAuth() {
       if (loading) return

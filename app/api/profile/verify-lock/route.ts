@@ -21,15 +21,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'Invalid token' }, { status: 401 })
     }
 
-    const uid = payload.sub
-    const supabase = createAdminClient()
-
-    const { data, error } = await supabase.rpc('verify_user_lock', { p_user_id: uid, p_lock: lock_key })
-    if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
-
-    // RPC returns boolean
-    const ok = !!data
-    return NextResponse.json({ ok })
+  // Use a global default unlock key (do not rely on per-user stored secrets).
+  const DEFAULT_KEY = (process.env.DEFAULT_UNLOCK_KEY || 'TUTORIAL2097')
+  const ok = lock_key === DEFAULT_KEY
+  return NextResponse.json({ ok })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message || String(err) }, { status: 500 })
   }
