@@ -10,17 +10,12 @@ async function checkTable() {
     console.log('Checking profiles table...');
 
     // Try to select one row and see the keys
-    const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .limit(1)
-        .single();
-
+    const { data: profiles, error } = await supabase.from('profiles').select('*').limit(10)
     if (error) {
-        console.error('Error selecting from profiles:', error.message);
-    } else {
-        console.log('Columns found:', Object.keys(data));
+        console.error('Error fetching profiles:', error)
+        return
     }
+    console.log('Profiles data:', JSON.stringify(profiles, null, 2));
 }
 
 checkTable();

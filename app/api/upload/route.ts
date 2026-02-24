@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import createAdminClient from '../../../lib/supabase-admin'
+import { getAuthSecret, getStorageBucket } from '../../../lib/env'
 
 export async function POST(req: Request) {
   try {
@@ -10,7 +11,7 @@ export async function POST(req: Request) {
     const token = match ? match[1] : null
     if (!token) return NextResponse.json({ ok: false, error: 'Not authenticated' }, { status: 401 })
 
-    const secret = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-secret'
+    const secret = getAuthSecret()
     let payload: any
     try {
       payload = jwt.verify(token, secret) as any
@@ -29,9 +30,8 @@ export async function POST(req: Request) {
     const type = searchParams.get('type') || 'avatar'
 
     const supabase = createAdminClient()
-    const bucket = type === 'chat'
-      ? 'chat_media'
-      : (process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'blackboxbucket')
+    const bucketRaw = getStorageBucket()
+    const bucket = (type === 'chat' ? 'chat_media' : bucketRaw)
 
     let ext = ''
     const matchImage = contentType.match(/image\/(png|jpeg|jpg|gif|webp)/)

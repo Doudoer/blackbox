@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import createAdminClient from '../../../lib/supabase-admin'
+import { getAuthSecret } from '../../../lib/env'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +16,7 @@ export async function GET(req: Request) {
     const token = match ? match[1] : null
     if (!token) return NextResponse.json({ ok: false, error: 'Not authenticated' }, { status: 401 })
 
-    const secret = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-secret'
+    const secret = getAuthSecret()
     let payload: any
     try {
       payload = jwt.verify(token, secret) as any
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
     const token = match ? match[1] : null
     if (!token) return NextResponse.json({ ok: false, error: 'Not authenticated' }, { status: 401 })
 
-    const secret = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-secret'
+    const secret = getAuthSecret()
     let payload: any
     try {
       payload = jwt.verify(token, secret) as any
@@ -101,7 +102,7 @@ export async function PUT(req: Request) {
     const token = match ? match[1] : null
     if (!token) return NextResponse.json({ ok: false, error: 'Not authenticated' }, { status: 401 })
 
-    const secret = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-secret'
+    const secret = getAuthSecret()
     let payload: any
     try {
       payload = jwt.verify(token, secret) as any
@@ -145,7 +146,7 @@ export async function DELETE(req: Request) {
     const token = match ? match[1] : null
     if (!token) return NextResponse.json({ ok: false, error: 'Not authenticated' }, { status: 401 })
 
-    const secret = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-secret'
+    const secret = getAuthSecret()
     let payload: any
     try {
       payload = jwt.verify(token, secret) as any
@@ -206,7 +207,7 @@ export async function PATCH(req: Request) {
     const token = match ? match[1] : null
     if (!token) return NextResponse.json({ ok: false, error: 'Not authenticated' }, { status: 401 })
 
-    const secret = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-secret'
+    const secret = getAuthSecret()
     let payload: any
     try {
       payload = jwt.verify(token, secret) as any

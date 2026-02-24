@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import createAdminClient from '../../../../lib/supabase-admin'
 import jwt from 'jsonwebtoken'
+import { getAuthSecret } from '../../../../lib/env'
 
 export async function POST(req: Request) {
   try {
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
     if (profileData?.pass_blocked) return NextResponse.json({ error: 'Account blocked' }, { status: 403 })
 
     // Sign JWT
-    const secret = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-secret'
+    const secret = getAuthSecret()
   const token = jwt.sign({ sub: uid }, secret, { expiresIn: '7d' })
 
   console.log('[auth/login] signing token for uid=', uid)

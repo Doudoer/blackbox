@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import createAdminClient from '../../../../lib/supabase-admin'
+import { getAuthSecret } from '../../../../lib/env'
 
 // Debug endpoint: return the current authenticated user's avatar_url as stored in profiles
 export async function GET(req: Request) {
@@ -10,7 +11,7 @@ export async function GET(req: Request) {
     const token = match ? match[1] : null
     if (!token) return NextResponse.json({ ok: false, error: 'Not authenticated' }, { status: 401 })
 
-    const secret = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-secret'
+    const secret = getAuthSecret()
     let payload: any
     try {
       payload = jwt.verify(token, secret) as any

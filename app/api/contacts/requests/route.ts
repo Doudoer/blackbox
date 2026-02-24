@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import createAdminClient from '../../../../lib/supabase-admin'
+import { getAuthSecret } from '../../../../lib/env'
 
 function getUid(req: Request): string | null {
     const cookieHeader = req.headers.get('cookie') || ''
@@ -8,7 +9,7 @@ function getUid(req: Request): string | null {
     const token = match ? match[1] : null
     if (!token) return null
     try {
-        const secret = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-secret'
+        const secret = getAuthSecret()
         const payload = jwt.verify(token, secret) as any
         return payload.sub || null
     } catch {
