@@ -3,9 +3,9 @@ import jwt from 'jsonwebtoken'
 import createAdminClient from '../../../../../lib/supabase-admin'
 
 // PATCH /api/admin/users/[id]
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const { id } = params
+        const { id } = await params
         const body = await req.json()
         const { action, value } = body
 
@@ -74,9 +74,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 }
 
 // DELETE /api/admin/users/[id]
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const { id } = params
+        const { id } = await params
 
         const cookieHeader = req.headers.get('cookie') || ''
         const match = cookieHeader.match(/bb_token=([^;]+)/)
