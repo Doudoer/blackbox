@@ -136,9 +136,70 @@ export async function DELETE(req: Request) {
   try {
     const url = new URL(req.url)
     const id = url.searchParams.get('id')
-    if (!id) return NextResponse.json({ ok: false, error: 'Missing id param' }, { status: 400 })
+    const peer_id = url.searchParams.get('peer_id')
 
-    if (id.startsWith('tmp-')) return NextResponse.json({ ok: true, message: 'tmp ignored' })
+    if (!id && !peer_id) return NextResponse.json({ ok: false, error: 'Missing id or peer_id param' }, { status: 400 })
+
+    const cookieHeader = req.headers.get('cookie') || ''
+    const match = cookieHeader.match(/bb_token=([^;]+)/)
+    const token = match ? match[1] : null
+    if (!token) return NextResponse.json({ ok: false, error: 'Not authenticated' }, { status: 401 })
+
+    const secret = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-secret'
+    let payload: any
+    try {
+      payload = jwt.verify(token, secret) as any
+    } catch (err) {
+      return NextResponse.json({ ok: false, error: 'Invalid token' }, { status: 401 })
+    }
+
+    const uid = payload.sub
+    if (!uid) return NextResponse.json({ ok: false, error: 'Invalid token payload' }, { status: 400 })
+
+    const supabase = createAdminClient()
+
+    if (peer_id) {
+      // Borrar toda la conversación con este peer (envíos mutuos)
+      // Usamos el mismo patrón de "borrado suave" pero masivo
+      const { error } = await supabase
+        .from('messages')
+        .update({ is_deleted: true, content: '', image_url: null, sticker_url: null, audio_url: null })
+        .or(`and(sender_id.eq.${uid},receiver_id.eq.${peer_id}),and(sender_id.eq.${peer_id},receiver_id.eq.${uid})`)
+
+      if (error) {
+        console.error('[messages:DELETE:bulk] supabase error:', error)
+        return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
+      }
+      return NextResponse.json({ ok: true })
+    }
+
+    if (id && id.startsWith('tmp-')) return NextResponse.json({ ok: true, message: 'tmp ignored' })
+
+    // Borrado individual
+    const { data, error } = await supabase
+      .from('messages')
+      .update({ is_deleted: true, content: '', image_url: null, sticker_url: null, audio_url: null })
+      .eq('id', id!)
+      .eq('sender_id', uid)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('[messages:DELETE] supabase error:', error)
+      return NextResponse.json({ ok: false, error: error.message, details: error }, { status: 500 })
+    }
+
+    return NextResponse.json({ ok: true, message: data })
+  } catch (err: any) {
+    return NextResponse.json({ ok: false, error: err.message || String(err) }, { status: 500 })
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const url = new URL(req.url)
+    const peer_id = url.searchParams.get('peer_id')
+    if (!peer_id) return NextResponse.json({ ok: false, error: 'Missing peer_id' }, { status: 400 })
 
     const cookieHeader = req.headers.get('cookie') || ''
     const match = cookieHeader.match(/bb_token=([^;]+)/)
@@ -156,21 +217,20 @@ export async function DELETE(req: Request) {
     const uid = payload.sub
     const supabase = createAdminClient()
 
-    // Borrado suave que vacía el contenido para privacidad (sin violar NOT NULL)
-    const { data, error } = await supabase
+    // Marcar como leídos los mensajes que yo recibí de este peer
+    const { error } = await supabase
       .from('messages')
-      .update({ is_deleted: true, content: '', image_url: null, sticker_url: null, audio_url: null })
-      .eq('id', id)
-      .eq('sender_id', uid)
-      .select()
-      .single()
+      .update({ is_read: true })
+      .eq('sender_id', peer_id)
+      .eq('receiver_id', uid)
+      .eq('is_read', false)
 
     if (error) {
-      console.error('[messages:DELETE] supabase error:', error)
-      return NextResponse.json({ ok: false, error: error.message, details: error }, { status: 500 })
+      console.error('[messages:PATCH] error marking as read:', error)
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, message: data })
+    return NextResponse.json({ ok: true })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message || String(err) }, { status: 500 })
   }

@@ -16,7 +16,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/chat')
+      if (user.is_admin) router.push('/admin')
+      else router.push('/chat')
     }
   }, [loading, user, router])
 
@@ -25,8 +26,9 @@ export default function LoginPage() {
     setError(null)
     setIsSubmitting(true)
     try {
-      await signIn(username, password)
-      router.push('/chat')
+      const res = await signIn(username, password)
+      if (res.user?.is_admin) router.push('/admin')
+      else router.push('/chat')
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión')
       setIsSubmitting(false)

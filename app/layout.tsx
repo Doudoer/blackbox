@@ -12,7 +12,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // are benign (for example, extensions injecting attributes like data-lt-installed).
   return (
     <html lang="es" suppressHydrationWarning>
-      <body>{children}</body>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#39FF14" />
+      </head>
+      <body>
+        {children}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js');
+              });
+            }
+          `
+        }} />
+      </body>
     </html>
   )
 }

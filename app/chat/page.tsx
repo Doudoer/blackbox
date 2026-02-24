@@ -294,6 +294,25 @@ export default function ChatPage() {
   const [isPeerTyping, setIsPeerTyping] = useState(false)
   const typingTimeoutRef = useRef<any>(null)
   const [isLocked, setIsLocked] = useState(false)
+  const [deletedMessageIds, setDeletedMessageIds] = useState<Set<string>>(new Set())
+
+  const markAsRead = useCallback(async (peerId: string) => {
+    if (!peerId) return
+    try {
+      await fetch(`/api/messages?peer_id=${peerId}`, { method: 'PATCH', credentials: 'include' })
+    } catch (err) {
+      console.error('[ChatPage] Error marking as read:', err)
+    }
+  }, [])
+
+  const scrollToMessage = useCallback((id: string | number) => {
+    const el = document.getElementById(`msg-${id}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.classList.add('animate-highlight')
+      setTimeout(() => el.classList.remove('animate-highlight'), 2000)
+    }
+  }, [])
 
   useEffect(() => {
     if (selectedPeer) {
@@ -301,14 +320,9 @@ export default function ChatPage() {
       // Marcar como leídos localmente
       setContacts(prev => prev.map(c => c.id === selectedPeer ? { ...c, unread_msgs: 0 } : c))
       // Notificar al backend
-      fetch('/api/messages/read', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ peer_id: selectedPeer }),
-        credentials: 'include'
-      }).catch(console.error)
+      markAsRead(selectedPeer)
     }
-  }, [selectedPeer])
+  }, [selectedPeer, markAsRead])
 
   // =========================================================================
   // Bloqueo de Aplicación (App Lock)
@@ -378,7 +392,11 @@ export default function ChatPage() {
       )
       if (idx !== -1) { const copy = [...prev]; copy[idx] = newMessage; return copy }
       if (prev.some(m => m.id === newMessage.id)) return prev
-      return [...prev, newMessage]
+      const updated = [...prev, newMessage]
+      if (newMessage.sender_id === selectedPeer) {
+        markAsRead(selectedPeer)
+      }
+      return updated
     })
   }, [user?.id, selectedPeer])
 
@@ -437,11 +455,20 @@ export default function ChatPage() {
       try {
         const res = await fetch(`/api/messages?peer=${selectedPeer}&t=${Date.now()}`, { credentials: 'include', cache: 'no-store' })
         const j = await res.json()
-        if (mounted && res.ok && j.ok) setMessages(j.messages || [])
+        if (mounted && res.ok && j.ok) {
+          const fetchedMessages = j.messages || []
+          // Aplicar borrado suave local a los mensajes traídos del servidor que aún no reflejen el cambio
+          const mergedMessages = fetchedMessages.map((m: any) =>
+            deletedMessageIds.has(String(m.id))
+              ? { ...m, is_deleted: true, content: '', image_url: null, sticker_url: null, audio_url: null }
+              : m
+          )
+          setMessages(mergedMessages)
+        }
       } catch { }
     }, 5000)
     return () => { mounted = false; clearInterval(interval) }
-  }, [selectedPeer])
+  }, [selectedPeer, deletedMessageIds])
 
   // Polling for contact requests
   useEffect(() => {
@@ -499,22 +526,31 @@ export default function ChatPage() {
     }
   }
 
-  const deleteMessage = async (id: string) => {
-    // Si es un mensaje temporal (optimistic), solo quítalo localmente o marca como borrado
-    if (String(id).startsWith('tmp-')) {
-      setMessages(prev => prev.filter(m => m.id !== id))
+  const deleteMessage = async (id: string | number) => {
+    console.log('[ChatPage] deleteMessage called for:', id)
+    const sid = String(id)
+
+    // Optimistic UI: mark as deleted locally immediately
+    setDeletedMessageIds(prev => new Set(prev).add(sid))
+    setMessages(prev => prev.map(m => String(m.id) === sid ? { ...m, is_deleted: true, content: '', image_url: null, sticker_url: null, audio_url: null } : m))
+
+    if (sid.startsWith('tmp-')) {
+      setMessages(prev => prev.filter(m => String(m.id) !== sid))
       return
     }
 
-    setMessages(prev => prev.map(m => m.id === id ? { ...m, is_deleted: true, content: '', image_url: null, sticker_url: null, audio_url: null } : m))
     try {
-      const res = await fetch(`/api/messages?id=${id}`, { method: 'DELETE', credentials: 'include' })
+      console.log('[ChatPage] Sending DELETE request for:', sid)
+      const res = await fetch(`/api/messages?id=${sid}`, { method: 'DELETE', credentials: 'include' })
       if (!res.ok) {
-        // Fallback: si falla el backend, restaurar fetchando de nuevo
-        const msgs = await fetch(`/api/messages?peer=${selectedPeer}&t=${Date.now()}`, { credentials: 'include', cache: 'no-store' }).then(r => r.json())
-        if (msgs.ok) setMessages(msgs.messages || [])
+        console.error('[ChatPage] DELETE failed with status:', res.status)
+        // Only revert if it's a critical failure (optional logic, keeping it simple for now)
+      } else {
+        console.log('[ChatPage] DELETE success for:', sid)
       }
-    } catch { }
+    } catch (err) {
+      console.error('[ChatPage] DELETE fetch error:', err)
+    }
   }
 
   const updateMessage = async (id: string, newContent: string) => {
@@ -530,6 +566,23 @@ export default function ChatPage() {
         body: JSON.stringify({ id, content: newContent })
       })
     } catch { }
+  }
+
+  const clearConversation = async () => {
+    if (!selectedPeer) return
+    const contact = contacts.find(c => c.id === selectedPeer)
+    const name = contact?.nombre_mostrar || contact?.username || 'este contacto'
+    if (!window.confirm(`¿Estás seguro de que quieres borrar TODA la conversación con ${name}? Esta acción no se puede deshacer.`)) return
+
+    try {
+      const res = await fetch(`/api/messages?peer_id=${selectedPeer}`, { method: 'DELETE', credentials: 'include' })
+      if (res.ok) {
+        setMessages([])
+        setReplyingTo(null)
+      }
+    } catch (err) {
+      console.error('[ChatPage] Error clearing conversation:', err)
+    }
   }
 
   const handleDeleteContact = async () => {
@@ -564,7 +617,7 @@ export default function ChatPage() {
           onUnlock={() => setIsLocked(false)}
         />
       ) : (
-        <div className="flex h-screen w-full bg-[#070b14] md:p-4 font-sans overflow-hidden">
+        <div className="flex h-[100dvh] w-full bg-[#070b14] md:p-4 font-sans overflow-hidden">
           <div className="glass-panel flex w-full h-full overflow-hidden shadow-2xl relative">
 
             {/* Mobile Overlay */}
@@ -801,6 +854,15 @@ export default function ChatPage() {
                   >
                     <Search size={18} />
                   </button>
+                  {selectedPeer && (
+                    <button
+                      onClick={clearConversation}
+                      className="flex w-9 h-9 rounded-xl bg-white/5 items-center justify-center text-[#94a3b8] hover:text-[#FF3131] hover:bg-red-500/10 transition-colors border border-white/10 hover:border-red-500/30"
+                      title="Borrar Chat"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
                   <button className="hidden md:flex w-9 h-9 rounded-xl bg-white/5 items-center justify-center text-[#94a3b8] hover:text-white transition-colors">
                     <Settings size={18} />
                   </button>
@@ -823,18 +885,21 @@ export default function ChatPage() {
                   </div>
                 ) : (
                   messages
+                    .filter(m => !m.is_deleted && !deletedMessageIds.has(String(m.id)))
                     .filter(m => !m.expires_at || new Date(m.expires_at) > new Date())
                     .filter(m => !chatSearch || (m.content && m.content.toLowerCase().includes(chatSearch.toLowerCase())))
                     .map(msg => (
-                      <ChatMessage
-                        key={msg.id}
-                        message={msg}
-                        isOwn={msg.sender_id === user?.id}
-                        onReply={() => setReplyingTo(msg)}
-                        replyMessage={msg.reply_to_id ? messages.find(m => m.id === msg.reply_to_id) : null}
-                        onDelete={() => deleteMessage(msg.id)}
-                        onEdit={() => setEditingMessage(msg)}
-                      />
+                      <div key={msg.id} id={`msg-${msg.id}`} className="transition-all duration-500 rounded-2xl">
+                        <ChatMessage
+                          message={msg}
+                          isOwn={msg.sender_id === user?.id}
+                          onReply={() => setReplyingTo(msg)}
+                          replyMessage={msg.reply_to_id ? messages.find(m => m.id === msg.reply_to_id) : null}
+                          onScrollToReply={scrollToMessage}
+                          onDelete={() => deleteMessage(msg.id)}
+                          onEdit={() => setEditingMessage(msg)}
+                        />
+                      </div>
                     ))
                 )}
               </div>

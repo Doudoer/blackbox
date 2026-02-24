@@ -18,6 +18,8 @@ export default function ProfileSettings({ onClose }: { onClose: () => void }) {
     const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile')
     const [appLockPin, setAppLockPin] = useState('')
     const [isAppLockLoading, setIsAppLockLoading] = useState(false)
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+    const [isInstalled, setIsInstalled] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
@@ -25,6 +27,21 @@ export default function ProfileSettings({ onClose }: { onClose: () => void }) {
             setUsername(user.username || '')
             setNombreMostrar(user.nombre_mostrar || '')
             setAvatarUrl(user.avatar_url || '')
+        }
+
+        const handleBeforeInstallPrompt = (e: any) => {
+            e.preventDefault()
+            setDeferredPrompt(e)
+        }
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            setIsInstalled(true)
+        }
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
         }
     }, [user])
 
@@ -153,6 +170,26 @@ export default function ProfileSettings({ onClose }: { onClose: () => void }) {
             setMessage({ type: 'error', text: err.message })
         } finally {
             setIsSaving(false)
+        }
+    }
+
+    const handleInstallPWA = async () => {
+        if (!deferredPrompt) return
+        deferredPrompt.prompt()
+        const { outcome } = await deferredPrompt.userChoice
+        if (outcome === 'accepted') {
+            setDeferredPrompt(null)
+            setIsInstalled(true)
+        }
+    }
+
+    const handleExitApp = () => {
+        if (window.confirm('¿Estás seguro de que quieres salir de la aplicación?')) {
+            window.close()
+            // Fallback for browsers that don't allow window.close()
+            setTimeout(() => {
+                window.location.href = 'about:blank'
+            }, 500)
         }
     }
 
@@ -348,6 +385,35 @@ export default function ProfileSettings({ onClose }: { onClose: () => void }) {
                                                     {isAppLockLoading ? <Loader className="animate-spin mx-auto" size={14} /> : "Desactivar"}
                                                 </button>
                                             )}
+                                        </div>
+                                    </div>
+                                    <div className="pt-4 border-t border-white/5 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h4 className="text-white font-bold text-sm">Aplicación PWA</h4>
+                                                <p className="text-[#94a3b8] text-[9px] mt-1 pr-4">Instala la aplicación para una mejor experiencia o sal de ella.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {!isInstalled && deferredPrompt ? (
+                                                <button
+                                                    onClick={handleInstallPWA}
+                                                    className="w-full py-2.5 rounded-xl bg-[#39FF14]/10 text-[#39FF14] text-xs font-bold hover:bg-[#39FF14]/20 transition-colors border border-[#39FF14]/20"
+                                                >
+                                                    Instalar App
+                                                </button>
+                                            ) : (
+                                                <div className="w-full py-2.5 rounded-xl bg-white/5 text-white/40 text-xs font-bold border border-white/10 text-center flex items-center justify-center opacity-50 cursor-default">
+                                                    {isInstalled ? "Instalado" : "No disponible"}
+                                                </div>
+                                            )}
+                                            <button
+                                                onClick={handleExitApp}
+                                                className="w-full py-2.5 rounded-xl bg-red-500/10 text-red-500 text-xs font-bold hover:bg-red-500/20 transition-colors border border-red-500/20"
+                                            >
+                                                Salir / Cerrar
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

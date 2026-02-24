@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { CornerUpLeft, Edit2, Trash2 } from 'react-feather'
 
-export default function ChatMessage({ message, isOwn, onReply, replyMessage, onEdit, onDelete }: { message: any; isOwn: boolean; onReply?: () => void; replyMessage?: any; onEdit?: () => void; onDelete?: () => void }) {
+export default function ChatMessage({ message, isOwn, onReply, replyMessage, onScrollToReply, onEdit, onDelete }: { message: any; isOwn: boolean; onReply?: () => void; replyMessage?: any; onScrollToReply?: (id: string | number) => void; onEdit?: () => void; onDelete?: () => void | Promise<void> }) {
   const [enter, setEnter] = useState(false)
 
   useEffect(() => {
@@ -44,7 +44,10 @@ export default function ChatMessage({ message, isOwn, onReply, replyMessage, onE
             <>
               {/* Si este mensaje es una respuesta a otro */}
               {replyMessage && (
-                <div className={`mb-2 p-2 rounded flex flex-col border-l-2 text-xs bg-black/20 ${isOwn ? 'border-[#39FF14]' : 'border-white/20'}`}>
+                <div
+                  onClick={() => onScrollToReply && onScrollToReply(message.reply_to_id)}
+                  className={`mb-2 p-2 rounded flex flex-col border-l-2 text-xs bg-black/20 cursor-pointer hover:bg-black/40 transition-colors ${isOwn ? 'border-[#39FF14]' : 'border-white/20'}`}
+                >
                   <span className={`font-semibold mb-1 ${isOwn ? 'text-[#39FF14]' : 'text-white/60'}`}>
                     {replyMessage.sender_id === message.sender_id ? 'A sí mismo' : 'Respondiendo'}
                   </span>
