@@ -18,8 +18,8 @@ async function cleanupData() {
     }
 
     for (const profile of profiles) {
-        if (profile.avatar_url && (profile.avatar_url.includes('\r') || profile.avatar_url.includes('\n'))) {
-            const cleanUrl = profile.avatar_url.replace(/\r/g, '').replace(/\n/g, '').trim()
+        if (profile.avatar_url && (profile.avatar_url.includes('\r') || profile.avatar_url.includes('\n') || profile.avatar_url.includes('%0D%0A'))) {
+            const cleanUrl = profile.avatar_url.replace(/\r/g, '').replace(/\n/g, '').replace(/%0D%0A/g, '').trim()
             console.log(`Cleaning avatar for user ${profile.id}: ${profile.avatar_url} -> ${cleanUrl}`)
 
             const { error: updateError } = await supabase

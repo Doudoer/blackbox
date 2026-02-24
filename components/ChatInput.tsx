@@ -75,6 +75,12 @@ export default function ChatInput({
     } else {
       onSend(content.trim(), 'text', undefined, replyingTo?.id, expiresAt)
     }
+
+    // Haptic feedback for Android
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(10)
+    }
+
     setContent('')
   }
 
@@ -249,13 +255,19 @@ export default function ChatInput({
         {/* Media Selectors (Smile & Clip) */}
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setShowPopup(!showPopup)}
-            className={`w-10 h-10 flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${showPopup ? 'text-[#39FF14]' : 'text-[#94a3b8] hover:text-[#39FF14]'}`}
+            onClick={() => {
+              setShowPopup(!showPopup)
+              if (navigator.vibrate) navigator.vibrate(5)
+            }}
+            className={`w-12 h-12 flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${showPopup ? 'text-[#39FF14]' : 'text-[#94a3b8] hover:text-[#39FF14]'}`}
             aria-label="Abrir Emojis/Stickers"
           >
-            <Smile size={22} />
+            <Smile size={24} />
           </button>
-          <label onClick={() => onMediaInteraction && onMediaInteraction()} className="w-10 h-10 flex items-center justify-center text-[#94a3b8] hover:text-[#39FF14] transition-all hover:scale-110 active:scale-95 cursor-pointer relative" title="Adjuntar imagen">
+          <label onClick={() => {
+            onMediaInteraction && onMediaInteraction()
+            if (navigator.vibrate) navigator.vibrate(5)
+          }} className="w-12 h-12 flex items-center justify-center text-[#94a3b8] hover:text-[#39FF14] transition-all hover:scale-110 active:scale-95 cursor-pointer relative" title="Adjuntar imagen">
             <input
               type="file"
               accept="image/*"
@@ -270,7 +282,7 @@ export default function ChatInput({
                 e.target.value = '' // reset
               }}
             />
-            <Paperclip size={22} />
+            <Paperclip size={24} />
           </label>
           <div className="relative">
             <button

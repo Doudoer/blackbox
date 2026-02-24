@@ -295,6 +295,8 @@ export default function ChatPage() {
   const typingTimeoutRef = useRef<any>(null)
   const [isLocked, setIsLocked] = useState(false)
   const [deletedMessageIds, setDeletedMessageIds] = useState<Set<string>>(new Set())
+  const touchStartX = useRef<number | null>(null)
+  const touchEndX = useRef<number | null>(null)
 
   const markAsRead = useCallback(async (peerId: string) => {
     if (!peerId) return
@@ -617,7 +619,21 @@ export default function ChatPage() {
           onUnlock={() => setIsLocked(false)}
         />
       ) : (
-        <div className="flex h-[100dvh] w-full bg-[#070b14] md:p-4 font-sans overflow-hidden">
+        <div
+          className="flex h-[100dvh] w-full bg-[#070b14] md:p-4 font-sans overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
+          onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX }}
+          onTouchMove={(e) => { touchEndX.current = e.touches[0].clientX }}
+          onTouchEnd={() => {
+            if (!touchStartX.current || !touchEndX.current) return
+            const xDiff = touchStartX.current - touchEndX.current
+            if (Math.abs(xDiff) > 50) {
+              if (xDiff > 0 && isSidebarOpen) setIsSidebarOpen(false)     // swipe left -> close
+              else if (xDiff < 0 && !isSidebarOpen) setIsSidebarOpen(true) // swipe right -> open
+            }
+            touchStartX.current = null
+            touchEndX.current = null
+          }}
+        >
           <div className="glass-panel flex w-full h-full overflow-hidden shadow-2xl relative">
 
             {/* Mobile Overlay */}
@@ -706,8 +722,10 @@ export default function ChatPage() {
                 {filteredContacts.map(c => (
                   <div
                     key={c.id}
-                    onClick={() => setSelectedPeer(c.id)}
-                    className={`glass-card p-3 rounded-2xl cursor-pointer flex items-center gap-4 relative group ${selectedPeer === c.id ? 'bg-white/[0.05] border-[#39FF14]/40 shadow-[0_0_20px_rgba(57,255,20,0.05)]' : ''}`}
+                    onClick={() => {
+                      setSelectedPeer(c.id)
+                      if (window.innerWidth < 768) setIsSidebarOpen(false)
+                    }}
                   >
                     <div style={{ width: '48px', height: '48px' }} className="relative flex-shrink-0">
                       <div className="w-full h-full rounded-full p-[2px] bg-gradient-to-tr from-[#39FF14]/40 to-transparent shadow-[0_0_10px_rgba(57,255,20,0.1)] overflow-hidden">

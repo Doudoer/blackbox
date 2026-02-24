@@ -67,16 +67,10 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="mt-12">
-            <div className="p-4 rounded-2xl bg-[#39FF14]/5 border border-[#39FF14]/20">
-              <div className="flex items-center gap-3 mb-2 text-[#39FF14]">
-                <Shield size={16} />
-                <span className="text-[10px] uppercase tracking-widest font-bold">Modo Demo Activo</span>
-              </div>
-              <p className="text-[#94a3b8] text-[10px] leading-relaxed opacity-70">
-                Utilice las credenciales de prueba:<br />
-                <span className="text-white/80 font-mono">alice / Test1234!</span>
-              </p>
+          <div className="mt-auto pt-10">
+            <div className="flex items-center gap-2 text-[#94a3b8] opacity-40">
+              <Shield size={14} />
+              <span className="text-[9px] uppercase tracking-widest font-bold">Protocolos de Acceso Cifrado</span>
             </div>
           </div>
         </div>
@@ -89,8 +83,8 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[#94a3b8] text-[10px] uppercase tracking-[0.2em] font-bold ml-1">ID Operador</label>
+            <div className="space-y-3">
+              <label className="text-[#94a3b8] text-[10px] uppercase tracking-[0.2em] font-bold block mb-1">ID Operador</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8] group-focus-within:text-[#39FF14] transition-colors">
                   <User size={18} />
@@ -106,8 +100,8 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[#94a3b8] text-[10px] uppercase tracking-[0.2em] font-bold ml-1">Clave de Acceso</label>
+            <div className="space-y-3">
+              <label className="text-[#94a3b8] text-[10px] uppercase tracking-[0.2em] font-bold block mb-1">Clave de Acceso</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8] group-focus-within:text-[#39FF14] transition-colors">
                   <Lock size={18} />
