@@ -642,52 +642,60 @@ export default function ChatPage() {
             )}
 
             {/* ── Sidebar ──────────────────────────────────────────────────── */}
-            <aside className={`fixed md:relative z-50 w-[280px] md:w-80 h-full flex flex-col border-r border-white/5 bg-[#0d111c]/95 md:bg-white/[0.01] sidebar-transition ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+            <aside className={`fixed md:relative z-50 w-[280px] md:w-80 h-full flex flex-col border-r border-white/5 bg-[#0d111c]/95 md:bg-white/[0.01] sidebar-transition left-0 top-0 bottom-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
               {/* Header */}
               <div className="p-6 border-b border-white/5 bg-white/[0.01]">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#39FF14]/20 to-transparent flex items-center justify-center font-bold text-[#39FF14] border border-[#39FF14]/30 shadow-[0_0_15px_rgba(57,255,20,0.1)]">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#39FF14]/20 to-transparent flex items-center justify-center font-bold text-[#39FF14] border border-[#39FF14]/30 shadow-[0_0_15px_rgba(57,255,20,0.1)] flex-shrink-0">
                       B
                     </div>
-                    <div>
+                    <div className="hidden sm:block">
                       <h1 className="font-heading text-white text-lg font-bold leading-none">Blackbox</h1>
                       <p className="text-[#94a3b8] text-[10px] uppercase tracking-widest mt-1 opacity-60">Secure Chat</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    {/* Close button (Mobile only) */}
+                    {isSidebarOpen && (
+                      <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="md:hidden w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[#94a3b8] hover:text-white transition-colors"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+
                     {/* Add contact button */}
                     <button
                       onClick={() => setShowAddContact(true)}
-                      className="w-9 h-9 rounded-xl bg-[#39FF14]/10 border border-[#39FF14]/20 flex items-center justify-center text-[#39FF14] hover:bg-[#39FF14]/20 transition-all duration-300"
+                      className="w-8 h-8 rounded-lg bg-[#39FF14]/10 border border-[#39FF14]/20 flex items-center justify-center text-[#39FF14] hover:bg-[#39FF14]/20 transition-all duration-300"
                       title="Agregar contacto"
                     >
-                      <UserPlus size={17} />
+                      <UserPlus size={16} />
                     </button>
+
+                    {/* Requests button */}
                     <div className="relative">
                       <button
                         onClick={() => setShowRequests(true)}
-                        className="relative w-9 h-9 rounded-xl bg-[#39FF14]/5 flex items-center justify-center text-[#39FF14] hover:bg-[#39FF14]/10 transition-all duration-300"
-                        title="Solicitudes de Amistad"
+                        className="relative w-8 h-8 rounded-lg bg-[#39FF14]/5 flex items-center justify-center text-[#39FF14] hover:bg-[#39FF14]/10 transition-all duration-300"
+                        title="Solicitudes"
                       >
-                        <Bell size={17} />
+                        <Bell size={16} />
                         {requests.length > 0 && (
-                          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#FF3131] rounded-full border-2 border-[#0d111c] shadow-[0_0_8px_rgba(255,49,49,0.8)] animate-pulse" />
+                          <span className="absolute top-1 right-1 w-2 h-2 bg-[#FF3131] rounded-full border border-[#0d111c] animate-pulse" />
                         )}
                       </button>
                     </div>
+
+                    {/* Settings button */}
                     <button
                       onClick={() => setShowSettings(true)}
-                      className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-[#94a3b8] hover:text-[#39FF14] hover:bg-white/10 transition-all duration-300"
+                      className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[#94a3b8] hover:text-[#39FF14] transition-all duration-300"
                       title="Ajustes"
                     >
-                      <Settings size={18} />
-                    </button>
-                    <button
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="md:hidden w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-[#94a3b8] hover:text-white"
-                    >
-                      <X size={20} />
+                      <Settings size={16} />
                     </button>
                   </div>
                 </div>
