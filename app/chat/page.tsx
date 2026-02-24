@@ -393,7 +393,7 @@ export default function ChatPage() {
       if (idx !== -1) { const copy = [...prev]; copy[idx] = newMessage; return copy }
       if (prev.some(m => m.id === newMessage.id)) return prev
       const updated = [...prev, newMessage]
-      if (newMessage.sender_id === selectedPeer) {
+      if (newMessage.sender_id === selectedPeer && selectedPeer) {
         markAsRead(selectedPeer)
       }
       return updated
