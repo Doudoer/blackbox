@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, Camera, Loader, Check, AlertCircle } from 'react-feather'
 import useAuth from '../hooks/useAuth'
+import ContextManager from './ContextManager'
 
 export default function ProfileSettings({ onClose }: { onClose: () => void }) {
     const { user } = useAuth()
@@ -15,7 +16,7 @@ export default function ProfileSettings({ onClose }: { onClose: () => void }) {
     const [currentPassword, setCurrentPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile')
+    const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'context'>('profile')
     const [appLockPin, setAppLockPin] = useState('')
     const [isAppLockLoading, setIsAppLockLoading] = useState(false)
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
@@ -221,6 +222,12 @@ export default function ProfileSettings({ onClose }: { onClose: () => void }) {
                                 className={`pb-2 text-xs uppercase tracking-widest font-bold transition-all ${activeTab === 'security' ? 'text-[#39FF14] border-b-2 border-[#39FF14]' : 'text-[#94a3b8] opacity-60 hover:opacity-100'}`}
                             >
                                 Seguridad
+                            </button>
+                            <button
+                                onClick={() => { setActiveTab('context'); setMessage(null); }}
+                                className={`pb-2 text-xs uppercase tracking-widest font-bold transition-all ${activeTab === 'context' ? 'text-[#39FF14] border-b-2 border-[#39FF14]' : 'text-[#94a3b8] opacity-60 hover:opacity-100'}`}
+                            >
+                                Contexto IA
                             </button>
                         </div>
                     </div>
